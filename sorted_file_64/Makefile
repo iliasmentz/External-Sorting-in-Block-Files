@@ -16,3 +16,7 @@ sr_main3:
 bf:
 	@echo " Compile bf_main ...";
 	gcc -I ./include/ -L ./lib/ -Wl,-rpath,./lib/ ./examples/bf_main.c -lbf -o ./build/runner -O2
+
+test:
+	@echo " Compile bf_main ...";
+	gcc -g -I ./include/ -L ./lib/ -Wl,-rpath,./lib/ ./src/heap.c ./examples/test.c -lbf -o ./build/test -O2

@@ -1,6 +1,12 @@
 #ifndef SORT_FILE_H
 #define SORT_FILE_H
 
+#define F_ID 1
+#define F_NAME 2
+#define F_SURNAME 3
+#define F_CITY 4
+#define NOT_OK (-1)
+
 typedef enum SR_ErrorCode {
   SR_OK,
   SR_ERROR
@@ -12,6 +18,7 @@ typedef struct Record {
 	char surname[20];
 	char city[20];
 } Record;
+
 
 /*
  * Η συνάρτηση SR_Init χρησιμοποιείται για την αρχικοποίηση του sort_file.
