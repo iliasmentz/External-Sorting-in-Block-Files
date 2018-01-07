@@ -276,6 +276,7 @@ SR_ErrorCode SR_SortedFile(
   Record* table_recs;
   void* current;
   void* previous;
+  Record record1, record2;
 
   //
   for (i=1; i<copied_blocks; i++)
@@ -297,15 +298,12 @@ SR_ErrorCode SR_SortedFile(
         SR_ReadRecord(current, &record2);
         SR_PrintRecords(record2);
 
-        previous = data+ (record_size * (j));
+        previous = data+ (record_size * (j-1));
 
-        if( Compare(current,previous,fieldNo)==-1 )
+        SR_ReadRecord(current, &record1);
+        SR_ReadRecord(previous, &record2);
+        if( Compare(&record1,&record2,fieldNo)==-1 )
         {
-					Record record1, record2;
-
-                    SR_ReadRecord(current, &record1);
-                    SR_ReadRecord(previous, &record2);
-
                     SR_WriteRecord(current, record2);
                     SR_WriteRecord(previous, record1);
 					swapped=1;//egine allagh
