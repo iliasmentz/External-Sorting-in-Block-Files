@@ -221,58 +221,13 @@ SR_ErrorCode SR_InsertEntry(int fileDesc, Record record) {
 
   return SR_OK;
 }
-
-SR_ErrorCode SR_SortedFile(
-  const char* input_filename,
-  const char* output_filename,
-  int fieldNo,
-  int bufferSize
-) {
-  // Your code goes here
+void Sort_Block(int fd_temp , int copied_blocks , int fieldNo)
+{
   char* data;
-  char* tempdata;
   int recs;
-  int fd , fd_temp;
-  int i, j, jj, temp, swapped=1;
-  int input_file_id , copied_file_id , sorted_file_id , copied_blocks;
-  char* sorted_file_name = malloc( (strlen(input_filename) +10)*sizeof(char));
-  BF_Block *tempblock;
-  //copy the original file to the temporary BF_OpenFile
-
-  CALL_OR_DIE(BF_OpenFile(input_filename , &fd));
-  CALL_OR_DIE(BF_CreateFile("temp0"));
-  printf("OK 0\n" );
-  CALL_OR_DIE(BF_OpenFile("temp0" , &fd_temp));
-  CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks));
-  BF_Block_Init(&tempblock);
-
-  printf("OK 1\n" );
-  for (i=0; i<copied_blocks; i++)
-  {
-    CALL_OR_DIE(BF_GetBlock(fd , i , block));
-    data = BF_Block_GetData(block);
-
-    CALL_OR_DIE(BF_AllocateBlock(fd_temp,tempblock));
-    CALL_OR_DIE(BF_GetBlock(fd_temp , i , tempblock));
-    tempdata = BF_Block_GetData(tempblock);
-
-    memcpy(tempdata , data , BF_BLOCK_SIZE);
-
-    BF_Block_SetDirty(tempblock);
-    CALL_OR_DIE(BF_UnpinBlock(tempblock));
-    CALL_OR_DIE(BF_UnpinBlock(block));
-
-  }
-
-  // SR_PrintAllEntries(fd_temp);
-
-  BF_Block_Destroy(&tempblock);
-  // printf("KLEINW TO %d\n",fd );
-  CALL_OR_DIE(SR_CloseFile(fd));
-  fd = fd_temp;
-  //
-  // printf("OK 2\n" );
-  //
+  int fd ;
+  int i, j, temp, swapped=1;
+  //BF_Block *tempblock;
   Record* table_recs;
   void* current;
   void* previous;
@@ -314,6 +269,71 @@ SR_ErrorCode SR_SortedFile(
     BF_Block_SetDirty(block);
     CALL_OR_DIE(BF_UnpinBlock(block));
   }
+}
+void Copy_Block(int fd , int fd_temp)
+{
+  char* data;
+  char* tempdata;
+  int i, j, swapped=1;
+  BF_Block *tempblock;
+  int copied_blocks;
+  //copy the original file to the temporary BF_OpenFile
+
+  CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks));
+  BF_Block_Init(&tempblock);
+
+  printf("OK 1\n" );
+  for (i=0; i<copied_blocks; i++)
+  {
+    CALL_OR_DIE(BF_GetBlock(fd , i , block));
+    data = BF_Block_GetData(block);
+
+    CALL_OR_DIE(BF_AllocateBlock(fd_temp,tempblock));
+    CALL_OR_DIE(BF_GetBlock(fd_temp , i , tempblock));
+    tempdata = BF_Block_GetData(tempblock);
+
+    memcpy(tempdata , data , BF_BLOCK_SIZE);
+
+    BF_Block_SetDirty(tempblock);
+    CALL_OR_DIE(BF_UnpinBlock(tempblock));
+    CALL_OR_DIE(BF_UnpinBlock(block));
+
+  }
+
+  // SR_PrintAllEntries(fd_temp);
+
+  BF_Block_Destroy(&tempblock);
+
+}
+
+SR_ErrorCode SR_SortedFile(
+  const char* input_filename,
+  const char* output_filename,
+  int fieldNo,
+  int bufferSize
+) {
+  // Your code goes here
+
+  int fd , fd_temp;
+  int i, j, jj, temp, swapped=1;
+  int input_file_id , copied_file_id , sorted_file_id , copied_blocks;
+  char* sorted_file_name = malloc( (strlen(input_filename) +10)*sizeof(char));
+  BF_Block *tempblock;
+  //copy the original file to the temporary BF_OpenFile
+
+  CALL_OR_DIE(BF_OpenFile(input_filename , &fd));
+  CALL_OR_DIE(BF_CreateFile("temp0"));
+  CALL_OR_DIE(BF_OpenFile("temp0" , &fd_temp));
+  Copy_Block(fd , fd_temp);
+  CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks))
+  // printf("KLEINW TO %d\n",fd );
+  CALL_OR_DIE(SR_CloseFile(fd));
+  fd = fd_temp;
+  //
+  // printf("OK 2\n" );
+  //
+  Sort_Block(fd_temp , copied_blocks , fieldNo);
+
 
   SR_PrintAllEntries(fd_temp);
 
