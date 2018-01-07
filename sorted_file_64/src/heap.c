@@ -67,6 +67,11 @@ heap_node * pop_heap(heap * my_heap)
 
 void update_heap(heap * my_heap, heap_node * node)
 {
+    if (node.record == NULL) {
+        my_heap->size--;
+        my_heap->values, &my_heap->values[1], (my_heap->size)*sizeof(heap_node));
+        return;
+    }
     int i;
     for ( i = 1; i < my_heap->size; i++)
     {
@@ -83,6 +88,7 @@ void update_heap(heap * my_heap, heap_node * node)
 
 void add_heap(heap * my_heap, heap_node * node)
 {
+
     int i;
     for ( i =0; i < my_heap->size; i++)
     {
@@ -115,6 +121,11 @@ void add_heap(heap * my_heap, heap_node * node)
         my_heap->values[i].block_records = node->block_records;
     }
     my_heap->size++;
+}
+
+int is_empty_heap(heap * my_heap)
+{
+    return (my_heap->size == 0) ;
 }
 
 void delete_heap(heap ** my_heap)
