@@ -75,6 +75,7 @@ void SR_ReadRecord(void * data, Record * record)
 {
     /*read id*/
     memcpy(&record->id, data, sizeof(record->id));
+
     /*read name*/
     data += sizeof(record->id);
     memcpy(&record->name, data, sizeof(record->name));
@@ -164,7 +165,7 @@ SR_ErrorCode SR_CloseFile(int fileDesc) {
   return SR_OK;
 }
 
-SR_ErrorCode SR_InsertEntry(int fileDesc,	Record record) {
+SR_ErrorCode SR_InsertEntry(int fileDesc, Record record) {
   // Your code goes here
 
   /*We get the block count in order to find the last one*/
@@ -237,12 +238,15 @@ SR_ErrorCode SR_SortedFile(
   char* sorted_file_name = malloc( (strlen(input_filename) +10)*sizeof(char));
   BF_Block *tempblock;
   //copy the original file to the temporary BF_OpenFile
+
   CALL_OR_DIE(BF_OpenFile(input_filename , &fd));
   CALL_OR_DIE(BF_CreateFile("temp0"));
+  printf("OK 0\n" );
   CALL_OR_DIE(BF_OpenFile("temp0" , &fd_temp));
   CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks));
   BF_Block_Init(&tempblock);
 
+  printf("OK 1\n" );
   for (i=0; i<copied_blocks; i++)
   {
     CALL_OR_DIE(BF_GetBlock(fd , i , block));
@@ -260,51 +264,60 @@ SR_ErrorCode SR_SortedFile(
 
   }
 
-  //BF_Block_Destroy(&tempblock);
-  CALL_OR_DIE(BF_CloseFile(fd));
+  // SR_PrintAllEntries(fd_temp);
+
+  BF_Block_Destroy(&tempblock);
+  // printf("KLEINW TO %d\n",fd );
+  CALL_OR_DIE(SR_CloseFile(fd));
   fd = fd_temp;
-
+  //
+  // printf("OK 2\n" );
+  //
   Record* table_recs;
-  Record* current;
-  Record* previous;
-  Record temprec;
+  void* current;
+  void* previous;
 
+  //
   for (i=1; i<copied_blocks; i++)
   {
-    CALL_OR_DIE(BF_GetBlock(fd, i ,tempblock));
-    data = BF_Block_GetData(tempblock);
+    CALL_OR_DIE(BF_GetBlock(fd_temp, i ,block));
+    data = BF_Block_GetData(block);
     memcpy(&recs , data , sizeof(int));
     data += sizeof(int);
-    table_recs = (Record *)data;
+    // table_recs = (Record *)data;
     swapped = 1;
-    printf("1 \n");
     while (swapped)
     {
+        // printf("RECS %d\n", recs );
       swapped =0;
-      for (j = 0; j<recs; j++)
+      for (j = 1; j<recs; j++)
       {
-        current = &table_recs[j];
-        previous = &table_recs[j-1];
-        //ta apokatw theloun allagh//
-        printf("2 \n");
+        current = data+ (record_size * (j));
+        Record record2;
+        SR_ReadRecord(current, &record2);
+        SR_PrintRecords(record2);
+
+        previous = data+ (record_size * (j));
+
         if( Compare(current,previous,fieldNo)==-1 )
         {
-          printf("3 \n");                                                     //sugkrineta
-					memmove(&temprec,current,sizeof(Record));
-					memmove(current,previous,sizeof(Record));
-					memmove(previous,&temprec,sizeof(Record));
+					Record record1, record2;
+
+                    SR_ReadRecord(current, &record1);
+                    SR_ReadRecord(previous, &record2);
+
+                    SR_WriteRecord(current, record2);
+                    SR_WriteRecord(previous, record1);
 					swapped=1;//egine allagh
-          printf("4 \n");
         }
       }
     }
-    printf("5 \n");
-    BF_Block_SetDirty(tempblock);
-    CALL_OR_DIE(BF_UnpinBlock(tempblock));
+
+    BF_Block_SetDirty(block);
+    CALL_OR_DIE(BF_UnpinBlock(block));
   }
 
-
-
+  SR_PrintAllEntries(fd_temp);
 
 
   return SR_OK;
