@@ -14,6 +14,44 @@
     }                         \
 }
 
+int Compare(Record* record1,Record* record2,int fieldNo){// girnaei 0 gia isothta,-1 an record1<record2,1 an record1>record2
+    if(fieldNo==0){
+        if(record1->id==record2->id){
+            return 0;
+        }else if(record1->id<record2->id){
+            return -1;
+        }else{
+            return 1;
+        }
+    }else if(fieldNo==1){
+        if(!strcmp(record1->name,record2->name)){
+            return 0;
+        }else if(strcmp(record1->name,record2->name)<0){
+            return -1;
+        }else{
+            return 1;
+        }
+    }else if(fieldNo==2){
+        if(!strcmp(record1->surname,record2->surname)){
+            return 0;
+        }else if(strcmp(record1->surname,record2->surname)<0){
+            return -1;
+        }else{
+            return 1;
+        }
+    }else if(fieldNo==3){
+        if(!strcmp(record1->city,record2->city)){
+            return 0;
+        }else if(strcmp(record1->city,record2->city)<0){
+            return -1;
+        }else{
+            return 1;
+        }
+    }
+    printf("ERROR to compare the records\n");
+    return -2;
+}
+
 BF_Block * block;
 int record_size = 0;
 int max_records = 0;
@@ -119,7 +157,7 @@ SR_ErrorCode SR_CloseFile(int fileDesc) {
   /*Destroy the block we created in the HP_Init*/
   /*we could create a function named HP_Close but we couldn't
   change the hp_main in order to call it */
-  BF_Block_Destroy(&block);
+  //BF_Block_Destroy(&block);
 
 
 
@@ -190,6 +228,84 @@ SR_ErrorCode SR_SortedFile(
   int bufferSize
 ) {
   // Your code goes here
+  char* data;
+  char* tempdata;
+  int recs;
+  int fd , fd_temp;
+  int i, j, jj, temp, swapped=1;
+  int input_file_id , copied_file_id , sorted_file_id , copied_blocks;
+  char* sorted_file_name = malloc( (strlen(input_filename) +10)*sizeof(char));
+  BF_Block *tempblock;
+  //copy the original file to the temporary BF_OpenFile
+  CALL_OR_DIE(BF_OpenFile(input_filename , &fd));
+  CALL_OR_DIE(BF_CreateFile("temp0"));
+  CALL_OR_DIE(BF_OpenFile("temp0" , &fd_temp));
+  CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks));
+  BF_Block_Init(&tempblock);
+
+  for (i=0; i<copied_blocks; i++)
+  {
+    CALL_OR_DIE(BF_GetBlock(fd , i , block));
+    data = BF_Block_GetData(block);
+
+    CALL_OR_DIE(BF_AllocateBlock(fd_temp,tempblock));
+    CALL_OR_DIE(BF_GetBlock(fd_temp , i , tempblock));
+    tempdata = BF_Block_GetData(tempblock);
+
+    memcpy(tempdata , data , BF_BLOCK_SIZE);
+
+    BF_Block_SetDirty(tempblock);
+    CALL_OR_DIE(BF_UnpinBlock(tempblock));
+    CALL_OR_DIE(BF_UnpinBlock(block));
+
+  }
+
+  //BF_Block_Destroy(&tempblock);
+  CALL_OR_DIE(BF_CloseFile(fd));
+  fd = fd_temp;
+
+  Record* table_recs;
+  Record* current;
+  Record* previous;
+  Record temprec;
+
+  for (i=1; i<copied_blocks; i++)
+  {
+    CALL_OR_DIE(BF_GetBlock(fd, i ,tempblock));
+    data = BF_Block_GetData(tempblock);
+    memcpy(&recs , data , sizeof(int));
+    data += sizeof(int);
+    table_recs = (Record *)data;
+    swapped = 1;
+    printf("1 \n");
+    while (swapped)
+    {
+      swapped =0;
+      for (j = 0; j<recs; j++)
+      {
+        current = &table_recs[j];
+        previous = &table_recs[j-1];
+        //ta apokatw theloun allagh//
+        printf("2 \n");
+        if( Compare(current,previous,fieldNo)==-1 )
+        {
+          printf("3 \n");                                                     //sugkrineta
+					memmove(&temprec,current,sizeof(Record));
+					memmove(current,previous,sizeof(Record));
+					memmove(previous,&temprec,sizeof(Record));
+					swapped=1;//egine allagh
+          printf("4 \n");
+        }
+      }
+    }
+    printf("5 \n");
+    BF_Block_SetDirty(tempblock);
+    CALL_OR_DIE(BF_UnpinBlock(tempblock));
+  }
+
+
+
+
 
   return SR_OK;
 }
