@@ -35,8 +35,8 @@ SR_ErrorCode SR_CreateFile(const char *fileName) {
 
   int fd;
 
-  CALL_OR_DIE(BF_CreateFile(filename));
-  CALL_OR_DIE(BF_OpenFile(filename, &fd));
+  CALL_OR_DIE(BF_CreateFile(fileName));
+  CALL_OR_DIE(BF_OpenFile(fileName, &fd));
   CALL_OR_DIE(BF_AllocateBlock(fd, block));
 
 
