@@ -183,7 +183,7 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
 
         for (j = 0; j < bufferSize-1; j ++) {
             /* code */
-            if(i+(j*level) > count)
+            if(i+(j*level) >= count)
                 break;
 
             CALL_OR_DIE(BF_GetBlock(file_id, i+(j*level), block));

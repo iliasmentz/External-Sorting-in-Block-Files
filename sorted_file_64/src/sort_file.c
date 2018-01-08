@@ -212,6 +212,8 @@ SR_ErrorCode SR_SortedFile(
   // printf("OK 2\n" );
   //
   Sort_Block(fd_temp , copied_blocks , fieldNo);
+
+
   char * next;
   char * current = malloc(100*sizeof(char));
   strcpy(current, "temp0");
@@ -227,6 +229,8 @@ SR_ErrorCode SR_SortedFile(
         remove(current);
         free(current);
         current = next;
+        CALL_OR_DIE(BF_CreateFile(current));
+        CALL_OR_DIE(BF_OpenFile(current, &fd));
     }
     printf("Next Level = %d\n", level );
   }
