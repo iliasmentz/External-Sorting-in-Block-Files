@@ -19,4 +19,4 @@ bf:
 
 test:
 	@echo " Compile bf_main ...";
-	gcc -g -I ./include/ -L ./lib/ -Wl,-rpath,./lib/ ./src/heap.c ./examples/test.c -lbf -o ./build/test -O2
+	gcc -g -I ./include/ -L ./lib/ -Wl,-rpath,./lib/ ./src/heap.c ./examples/test.c ./src/sorting_tools.c  ./src/sort_file.c -lbf -o ./build/test -O2

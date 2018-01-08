@@ -3,8 +3,8 @@
 #include <string.h>
 #include <time.h>
 
-#include "heap.h"
 #include "sort_file.h"
+#include "sorting_tools.h"
 
 const char* names[] = {
   "Yannis",
@@ -47,7 +47,7 @@ const char* cities[] = {
 
 int main() {
   int fd;
-  heap * my_heap =create_heap(28, 1, 3);
+  heap * my_heap =create_heap(28, 1, F_ID);
   Record record;
   srand(12569874);
   int r;
@@ -60,7 +60,7 @@ int main() {
     memcpy(record.surname, surnames[r], strlen(surnames[r]) + 1);
     r = rand() % 10;
     memcpy(record.city, cities[r], strlen(cities[r]) + 1);
-
+    printf("%d %s, %s\n", record.id, record.name, record.surname);
     heap_node node;
     node.record = &record;
     // memcpy(&(node), &record, sizeof(Record));
@@ -68,7 +68,10 @@ int main() {
     add_heap(my_heap, &node);
     // free(node.record);
   }
-  heap_node * node = pop_heap(my_heap);
-  printf("node %s\n", node->record->surname);
+    // for(int i = 0 ; i < 5 ;i++){
+      heap_node * node = pop_heap(my_heap);
+      printf("node %s %s %d\n", node->record->name, node->record->surname, node->record->id);
+    //   update_heap(my_heap, node);
+    // }
   delete_heap(&my_heap);
 }

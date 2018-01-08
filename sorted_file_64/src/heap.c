@@ -24,6 +24,7 @@ heap * create_heap(int size, int level, int fieldNo)
 
 heap_node * pop_heap(heap * my_heap)
 {
+    // printf("POP\n" );
     return &my_heap->values[0];
 }
 
@@ -37,11 +38,14 @@ void update_heap(heap * my_heap, heap_node * node)
     int i;
     for ( i = 1; i < my_heap->size; i++)
     {
+        if(node->record==NULL){
+            printf("NULL Gia i = %d kai size %d\n", i, my_heap->size);
+        }
         if (Compare(my_heap->values[i].record, node->record, my_heap->fieldNo)==1) {
             break;
         }
     }
-    memmove(my_heap->values, &my_heap->values[1], (my_heap->size -(my_heap->size - i -1))*sizeof(heap_node));
+    memmove(my_heap->values, &my_heap->values[1], (my_heap->size -(my_heap->size - (i -1)))*sizeof(heap_node));
     my_heap->values[i-1].record = node->record;
     my_heap->values[i-1].block_pos = node->block_pos;
     my_heap->values[i-1].block_num = node->block_num;

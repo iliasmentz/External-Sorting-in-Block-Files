@@ -197,7 +197,6 @@ SR_ErrorCode SR_SortedFile(
   int fd , fd_temp;
   int i, j, jj, temp, swapped=1;
   int input_file_id , copied_file_id , sorted_file_id , copied_blocks;
-  char* sorted_file_name = malloc( (strlen(input_filename) +10)*sizeof(char));
   BF_Block *tempblock;
   //copy the original file to the temporary BF_OpenFile
 
@@ -213,7 +212,26 @@ SR_ErrorCode SR_SortedFile(
   // printf("OK 2\n" );
   //
   Sort_Block(fd_temp , copied_blocks , fieldNo);
+  char * next;
+  char * current = malloc(100*sizeof(char));
+  strcpy(current, "temp0");
+  int level = 1;
+  while (level < copied_blocks) {
+      /* sort by level */
 
+    next = sort_by_level(fd, level, fieldNo, bufferSize);
+    CALL_OR_DIE(BF_CloseFile(fd));
+
+    level *= bufferSize-1;
+    if(level < bufferSize){
+        remove(current);
+        free(current);
+        current = next;
+    }
+    printf("Next Level = %d\n", level );
+  }
+
+  rename(current, output_filename);
 
   SR_PrintAllEntries(fd_temp);
 

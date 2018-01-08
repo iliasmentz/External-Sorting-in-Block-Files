@@ -17,7 +17,7 @@
 
 int Compare(Record* record1,Record* record2,int fieldNo)
 {   // girnaei 0 gia isothta,-1 an record1<record2,1 an record1>record2
-    if(fieldNo==0){
+    if(fieldNo==F_ID){
         if(record1->id==record2->id){
             return 0;
         }else if(record1->id<record2->id){
@@ -25,7 +25,7 @@ int Compare(Record* record1,Record* record2,int fieldNo)
         }else{
             return 1;
         }
-    }else if(fieldNo==1){
+    }else if(fieldNo==F_NAME ){
         if(!strcmp(record1->name,record2->name)){
             return 0;
         }else if(strcmp(record1->name,record2->name)<0){
@@ -33,7 +33,7 @@ int Compare(Record* record1,Record* record2,int fieldNo)
         }else{
             return 1;
         }
-    }else if(fieldNo==2){
+    }else if(fieldNo==F_SURNAME){
         if(!strcmp(record1->surname,record2->surname)){
             return 0;
         }else if(strcmp(record1->surname,record2->surname)<0){
@@ -41,7 +41,7 @@ int Compare(Record* record1,Record* record2,int fieldNo)
         }else{
             return 1;
         }
-    }else if(fieldNo==3){
+    }else if(fieldNo==F_CITY){
         if(!strcmp(record1->city,record2->city)){
             return 0;
         }else if(strcmp(record1->city,record2->city)<0){
@@ -120,7 +120,6 @@ void Copy_Block(int fd , int fd_temp)
   CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks));
   BF_Block_Init(&tempblock);
 
-  printf("OK 1\n" );
   for (i=0; i<copied_blocks; i++)
   {
     CALL_OR_DIE(BF_GetBlock(fd , i , block));
@@ -179,7 +178,7 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
 
     heap_node node;
     node.record = malloc(sizeof(Record));
-    for ( i = 0; i < count; i+= (bufferSize-1)*level) {
+    for ( i = 1; i < count; i+= (bufferSize-1)*level) {
 
 
         for (j = 0; j < bufferSize-1; j ++) {
@@ -209,6 +208,7 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
             to_be_written = pop_heap(my_heap);
             if(new_count == max_records){
                 /* our block is full and we need to create a new one */
+                // printf("New temp block\n" );
                 BF_Block_SetDirty(new_block);
                 CALL_OR_DIE(BF_UnpinBlock(new_block));
 
@@ -224,10 +224,13 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
             free(to_be_written->record);
 
             /*get next value from the block we just got the value */
+            // printf("BLOCK REC %d \n", to_be_written->block_pos);
             if (to_be_written->block_pos == to_be_written->block_records) {
                 /* we need the next block from the sorted ones */
+                // printf("wra na allaksw block\n" );
                 if(to_be_written->block_num%level ==0){
                     /* end of sorted blocks */
+                    // printf("Telos block\n" );
                     to_be_written->record = NULL;
                 }
                 else {
@@ -243,18 +246,23 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
                 }
             }
 
-            if(to_be_written->block_num%level != 0){
+            if((to_be_written->block_num%level != 0) || (to_be_written->block_pos < to_be_written->block_records)){
                 CALL_OR_DIE(BF_GetBlock(file_id, to_be_written->block_num, block));
                 data = BF_Block_GetData(block);
 
                 to_be_written->record = malloc(sizeof(Record));
-                SR_ReadRecord(data+sizeof(int)+record_size, to_be_written->record);
+                SR_ReadRecord(data+sizeof(int)+(record_size*to_be_written->block_pos), to_be_written->record);
+                to_be_written->block_pos++;
+                // printf("AUKSANW Pos\n" );
                 CALL_OR_DIE(BF_UnpinBlock(block));
             }
 
             update_heap(my_heap, to_be_written);
 
         }
+        // perror("ESPASA");
+        BF_Block_SetDirty(new_block);
+        CALL_OR_DIE(BF_UnpinBlock(new_block));
     }
 
 
