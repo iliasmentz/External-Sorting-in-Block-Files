@@ -7,6 +7,9 @@
 #define F_CITY 4
 #define NOT_OK (-1)
 
+extern int record_size;
+extern int max_records;
+
 typedef enum SR_ErrorCode {
   SR_OK,
   SR_ERROR
@@ -19,6 +22,8 @@ typedef struct Record {
 	char city[20];
 } Record;
 
+void SR_WriteRecord(void * data, Record record);
+void SR_ReadRecord(void * data, Record * record);
 
 /*
  * Η συνάρτηση SR_Init χρησιμοποιείται για την αρχικοποίηση του sort_file.

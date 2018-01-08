@@ -3,45 +3,7 @@
 #include <string.h>
 
 #include "bf.h"
-#include "heap.h"
-
-int compare(Record* record1,Record* record2,int fieldNo){// girnaei 0 gia isothta,-1 an record1<record2,1 an record1>record2
-    if(fieldNo==F_ID){
-        if(record1->id==record2->id){
-            return 0;
-        }else if(record1->id<record2->id){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==F_NAME){
-        if(!strcmp(record1->name,record2->name)){
-            return 0;
-        }else if(strcmp(record1->name,record2->name)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==F_SURNAME){
-        if(!strcmp(record1->surname,record2->surname)){
-            return 0;
-        }else if(strcmp(record1->surname,record2->surname)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==F_CITY){
-        if(!strcmp(record1->city,record2->city)){
-            return 0;
-        }else if(strcmp(record1->city,record2->city)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }
-    printf("ERROR to compare the records\n");
-    return -2;
-}
+#include "sorting_tools.h"
 
 heap * create_heap(int size, int level, int fieldNo)
 {
@@ -67,15 +29,15 @@ heap_node * pop_heap(heap * my_heap)
 
 void update_heap(heap * my_heap, heap_node * node)
 {
-    if (node.record == NULL) {
+    if (node->record == NULL) {
         my_heap->size--;
-        my_heap->values, &my_heap->values[1], (my_heap->size)*sizeof(heap_node));
+        memmove(my_heap->values, &my_heap->values[1], (my_heap->size)*sizeof(heap_node));
         return;
     }
     int i;
     for ( i = 1; i < my_heap->size; i++)
     {
-        if (compare(my_heap->values[i].record, node->record, my_heap->fieldNo)==1) {
+        if (Compare(my_heap->values[i].record, node->record, my_heap->fieldNo)==1) {
             break;
         }
     }
@@ -92,7 +54,7 @@ void add_heap(heap * my_heap, heap_node * node)
     int i;
     for ( i =0; i < my_heap->size; i++)
     {
-        if (compare(my_heap->values[i].record, node->record, my_heap->fieldNo)==1) {
+        if (Compare(my_heap->values[i].record, node->record, my_heap->fieldNo)==1) {
             break;
         }
     }

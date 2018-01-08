@@ -4,6 +4,7 @@
 
 #include "bf.h"
 #include "sort_file.h"
+#include "sorting_tools.h"
 
 #define CALL_OR_DIE(call)     \
 {                             \
@@ -14,43 +15,6 @@
     }                         \
 }
 
-int Compare(Record* record1,Record* record2,int fieldNo){// girnaei 0 gia isothta,-1 an record1<record2,1 an record1>record2
-    if(fieldNo==0){
-        if(record1->id==record2->id){
-            return 0;
-        }else if(record1->id<record2->id){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==1){
-        if(!strcmp(record1->name,record2->name)){
-            return 0;
-        }else if(strcmp(record1->name,record2->name)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==2){
-        if(!strcmp(record1->surname,record2->surname)){
-            return 0;
-        }else if(strcmp(record1->surname,record2->surname)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==3){
-        if(!strcmp(record1->city,record2->city)){
-            return 0;
-        }else if(strcmp(record1->city,record2->city)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }
-    printf("ERROR to compare the records\n");
-    return -2;
-}
 
 BF_Block * block;
 int record_size = 0;
@@ -220,90 +184,6 @@ SR_ErrorCode SR_InsertEntry(int fileDesc, Record record) {
   CALL_OR_DIE(BF_UnpinBlock(block));
 
   return SR_OK;
-}
-void Sort_Block(int fd_temp , int copied_blocks , int fieldNo)
-{
-  char* data;
-  int recs;
-  int fd ;
-  int i, j, temp, swapped=1;
-  //BF_Block *tempblock;
-  Record* table_recs;
-  void* current;
-  void* previous;
-  Record record1, record2;
-
-  //
-  for (i=1; i<copied_blocks; i++)
-  {
-    CALL_OR_DIE(BF_GetBlock(fd_temp, i ,block));
-    data = BF_Block_GetData(block);
-    memcpy(&recs , data , sizeof(int));
-    data += sizeof(int);
-    // table_recs = (Record *)data;
-    swapped = 1;
-    while (swapped)
-    {
-        // printf("RECS %d\n", recs );
-      swapped =0;
-      for (j = 1; j<recs; j++)
-      {
-        current = data+ (record_size * (j));
-        Record record2;
-        SR_ReadRecord(current, &record2);
-        SR_PrintRecords(record2);
-
-        previous = data+ (record_size * (j-1));
-
-        SR_ReadRecord(current, &record1);
-        SR_ReadRecord(previous, &record2);
-        if( Compare(&record1,&record2,fieldNo)==-1 )
-        {
-                    SR_WriteRecord(current, record2);
-                    SR_WriteRecord(previous, record1);
-					swapped=1;//egine allagh
-        }
-      }
-    }
-
-    BF_Block_SetDirty(block);
-    CALL_OR_DIE(BF_UnpinBlock(block));
-  }
-}
-void Copy_Block(int fd , int fd_temp)
-{
-  char* data;
-  char* tempdata;
-  int i, j, swapped=1;
-  BF_Block *tempblock;
-  int copied_blocks;
-  //copy the original file to the temporary BF_OpenFile
-
-  CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks));
-  BF_Block_Init(&tempblock);
-
-  printf("OK 1\n" );
-  for (i=0; i<copied_blocks; i++)
-  {
-    CALL_OR_DIE(BF_GetBlock(fd , i , block));
-    data = BF_Block_GetData(block);
-
-    CALL_OR_DIE(BF_AllocateBlock(fd_temp,tempblock));
-    CALL_OR_DIE(BF_GetBlock(fd_temp , i , tempblock));
-    tempdata = BF_Block_GetData(tempblock);
-
-    memcpy(tempdata , data , BF_BLOCK_SIZE);
-
-    BF_Block_SetDirty(tempblock);
-    CALL_OR_DIE(BF_UnpinBlock(tempblock));
-    CALL_OR_DIE(BF_UnpinBlock(block));
-
-  }
-
-  // SR_PrintAllEntries(fd_temp);
-
-  BF_Block_Destroy(&tempblock);
-
 }
 
 SR_ErrorCode SR_SortedFile(
