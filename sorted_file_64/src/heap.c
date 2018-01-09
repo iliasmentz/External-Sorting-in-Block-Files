@@ -45,9 +45,20 @@ void update_heap(heap * my_heap, heap_node * node)
             break;
         }
     }
-    memmove(my_heap->values, &my_heap->values[1], (my_heap->size -(my_heap->size - (i -1)))*sizeof(heap_node));
-    my_heap->values[i-1].record = node->record;
+    // printf("THA TO VALW STIN THESI %d\n", i-1 );
+    // printf("KANW UPDATE NODE-> pos %d  block %d Record-> %s %s\n", node->block_pos, node->block_num, node->record->name, node->record->surname);
+    // printf("METAKINISI TWN %d KAI SIZE %d\n", (my_heap->size -(my_heap->size - (i -1))), i);
+    memcpy(&my_heap->values[0], &my_heap->values[1], (i -1)*sizeof(heap_node));
+
+    my_heap->values[i-1].record = malloc(sizeof(Record));
+    my_heap->values[i-1].record->id = node->record->id;
+    strcpy(my_heap->values[i-1].record->name, node->record->name);
+    strcpy(my_heap->values[i-1].record->surname, node->record->surname);
+    strcpy(my_heap->values[i-1].record->city, node->record->city);
+    //node->record;
     my_heap->values[i-1].block_pos = node->block_pos;
+    // printf("MESA STO HEAP POS %d\n", node->block_pos);
+    // exit(1111);
     my_heap->values[i-1].block_num = node->block_num;
     my_heap->values[i-1].block_records = node->block_records;
 }

@@ -218,6 +218,8 @@ SR_ErrorCode SR_SortedFile(
   char * current = malloc(100*sizeof(char));
   strcpy(current, "temp0");
   int level = 1;
+  printf("STARTING BLOCK FOR %d BLOCKS \n",copied_blocks );
+
   while (level < copied_blocks) {
       /* sort by level */
 
@@ -225,19 +227,38 @@ SR_ErrorCode SR_SortedFile(
     CALL_OR_DIE(BF_CloseFile(fd));
 
     level *= bufferSize-1;
-    if(level < bufferSize){
+    if(level < copied_blocks ){
+
         remove(current);
         free(current);
         current = next;
-        CALL_OR_DIE(BF_CreateFile(current));
+
         CALL_OR_DIE(BF_OpenFile(current, &fd));
+
     }
+    else {
+        remove(current);
+        free(current);
+        current = next;
+
+        CALL_OR_DIE(BF_OpenFile(current, &fd));
+        next = sort_by_level(fd, level, fieldNo, bufferSize);
+
+        rename(current, output_filename);
+        remove(current);
+
+        free(current);
+        // CALL_OR_DIE(BF_CloseFile(fd));
+        break;
+
+    }
+
     printf("Next Level = %d\n", level );
   }
 
-  rename(current, output_filename);
 
-  SR_PrintAllEntries(fd_temp);
+  SR_PrintAllEntries(fd);
+  CALL_OR_DIE(BF_CloseFile(fd));
 
 
   return SR_OK;
