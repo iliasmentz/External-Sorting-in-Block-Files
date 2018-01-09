@@ -156,7 +156,7 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
     BF_Block_Init(&new_block);
 
     int new_file_id ;
-    printf("New file: %s\n", new_file);
+    // printf("New file: %s\n", new_file);
     CALL_OR_DIE(BF_OpenFile(new_file, &new_file_id));
 
 
@@ -247,7 +247,6 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
             to_be_stored->block_num = to_be_written->block_num;
             to_be_stored->block_records = to_be_written->block_records;
             to_be_stored->block_pos = to_be_written->block_pos;
-
             /*get next value from the block we just got the value */
             // printf("BLOCK REC %d \n", to_be_written->block_num);
             int read_entry=1;
@@ -300,14 +299,22 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
                 // printf("prin AUKSANW Pos %d\n", to_be_stored->block_pos);
 
                 to_be_stored->block_pos++;
-//                printf("AUKSANW Pos %d\n", to_be_written->block_pos);
+                //                printf("AUKSANW Pos %d\n", to_be_written->block_pos);
                 CALL_OR_DIE(BF_UnpinBlock(block));
-//                exit(1);
+                //                exit(1);
 
             }
 
             // printf("prin csall %d\n", to_be_written->block_pos);
             update_heap(my_heap, to_be_stored);
+            if (to_be_stored->record!=NULL) {
+                /* code */
+                free(to_be_stored->record);
+            }
+            if (to_be_stored !=NULL) {
+                /* code */
+                free(to_be_stored);
+            }
 
         }
 
@@ -317,6 +324,7 @@ char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
         CALL_OR_DIE(BF_UnpinBlock(new_block));
     }
 
+    free(node.record);
 
     BF_Block_Destroy(&block);
     BF_Block_Destroy(&new_block);

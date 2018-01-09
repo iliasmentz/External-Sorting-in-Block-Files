@@ -16,7 +16,6 @@
 }
 
 
-BF_Block * block;
 int record_size = 0;
 int max_records = 0;
 
@@ -58,7 +57,6 @@ void SR_PrintRecords(Record record)	{
 
 SR_ErrorCode SR_Init() {
   // Your code goes here
-  BF_Block_Init(&block);
 
   Record record;
   record_size = sizeof(record.id)+sizeof(record.name)+sizeof(record.surname)+sizeof(record.city);
@@ -69,7 +67,8 @@ SR_ErrorCode SR_Init() {
 
 SR_ErrorCode SR_CreateFile(const char *fileName) {
   // Your code goes here
-
+  BF_Block * block;
+  BF_Block_Init(&block);
   int fd;
 
   CALL_OR_DIE(BF_CreateFile(fileName));
@@ -86,12 +85,14 @@ SR_ErrorCode SR_CreateFile(const char *fileName) {
   CALL_OR_DIE(BF_UnpinBlock(block));
   /*close the file descriptor*/
   CALL_OR_DIE(BF_CloseFile(fd));
-
+  BF_Block_Destroy(&block);
   return SR_OK;
 }
 
 SR_ErrorCode SR_OpenFile(const char *fileName, int *fileDesc) {
   // Your code goes here
+  BF_Block * block;
+  BF_Block_Init(&block);
 
   // write your code here
   /*Open the block file*/
@@ -106,6 +107,8 @@ SR_ErrorCode SR_OpenFile(const char *fileName, int *fileDesc) {
   int result =(memcmp(data, "This is a sort file", 20)==0);
   /*unpin the block*/
   CALL_OR_DIE(BF_UnpinBlock(block));
+
+  BF_Block_Destroy(&block);
 
   if(result)
     return SR_OK;
@@ -131,7 +134,8 @@ SR_ErrorCode SR_CloseFile(int fileDesc) {
 
 SR_ErrorCode SR_InsertEntry(int fileDesc, Record record) {
   // Your code goes here
-
+  BF_Block * block;
+  BF_Block_Init(&block);
   /*We get the block count in order to find the last one*/
   int count;
 
@@ -182,6 +186,7 @@ SR_ErrorCode SR_InsertEntry(int fileDesc, Record record) {
   /*changes were made so we make it dirty before the unpin*/
   BF_Block_SetDirty(block);
   CALL_OR_DIE(BF_UnpinBlock(block));
+  BF_Block_Destroy(&block);
 
   return SR_OK;
 }
@@ -192,7 +197,16 @@ SR_ErrorCode SR_SortedFile(
   int fieldNo,
   int bufferSize
 ) {
-  // Your code goes here
+
+    if (bufferSize < 3 || bufferSize > BF_BUFFER_SIZE) {
+        /* code */
+        printf("Error: The number of blocks you want to use use is either too big or too small\n" );
+        return SR_ERROR;
+    }
+
+    // Your code goes here
+  BF_Block * block;
+  BF_Block_Init(&block);
 
   int fd , fd_temp;
   int i, j, jj, temp, swapped=1;
@@ -218,8 +232,8 @@ SR_ErrorCode SR_SortedFile(
   char * current = malloc(100*sizeof(char));
   strcpy(current, "temp0");
   int level = 1;
-  printf("STARTING BLOCK FOR %d BLOCKS \n",copied_blocks );
-
+  printf("\n=== STARTING SORTING FOR FIELD No. %d === \n\n",fieldNo );
+  printf("Next Level of Sorting = %d\n", level );
   while (level < copied_blocks) {
       /* sort by level */
 
@@ -234,6 +248,7 @@ SR_ErrorCode SR_SortedFile(
         current = next;
 
         CALL_OR_DIE(BF_OpenFile(current, &fd));
+        printf("Next Level of Sorting = %d\n", level );
 
     }
     else {
@@ -244,28 +259,33 @@ SR_ErrorCode SR_SortedFile(
         CALL_OR_DIE(BF_OpenFile(current, &fd));
         next = sort_by_level(fd, level, fieldNo, bufferSize);
 
-        rename(current, output_filename);
+        rename(next, output_filename);
+        free(next);
         remove(current);
 
+
         free(current);
-        // CALL_OR_DIE(BF_CloseFile(fd));
         break;
 
     }
 
-    printf("Next Level = %d\n", level );
   }
 
 
-  SR_PrintAllEntries(fd);
-  CALL_OR_DIE(BF_CloseFile(fd));
+  // SR_PrintAllEntries(fd);
 
+  BF_Block_Destroy(&block);
+  CALL_OR_DIE(BF_CloseFile(fd));
+  printf("=== END OF SORTING FOR FIELD No. %d === \n\n", fieldNo);
 
   return SR_OK;
 }
 
 SR_ErrorCode SR_PrintAllEntries(int fileDesc) {
   // Your code goes here
+
+  BF_Block * block;
+  BF_Block_Init(&block);
 
   int i, j;
 
@@ -295,5 +315,7 @@ SR_ErrorCode SR_PrintAllEntries(int fileDesc) {
       /*unpin this block as we read all his records*/
       CALL_OR_DIE(BF_UnpinBlock(block));
   }
+  BF_Block_Destroy(&block);
+
   return SR_OK;
 }

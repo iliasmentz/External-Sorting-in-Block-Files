@@ -1,10 +1,10 @@
 #ifndef SORT_FILE_H
 #define SORT_FILE_H
 
-#define F_ID 1
-#define F_NAME 2
-#define F_SURNAME 3
-#define F_CITY 4
+#define F_ID 0
+#define F_NAME 1
+#define F_SURNAME 2
+#define F_CITY 3
 #define NOT_OK (-1)
 
 extern int record_size;

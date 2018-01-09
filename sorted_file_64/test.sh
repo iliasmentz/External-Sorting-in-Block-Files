@@ -1,5 +1,5 @@
 #!/bin/bash
-rm ./temp*;
+rm ./temp* ./sorted*;
 make;
 clear;
-valgrind ./build/sr_main2;
+valgrind --leak-check=full ./build/sr_main2;
