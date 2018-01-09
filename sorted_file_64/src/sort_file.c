@@ -225,13 +225,13 @@ SR_ErrorCode SR_SortedFile(
   //
   // printf("OK 2\n" );
   //
-  Sort_Block(fd_temp , copied_blocks , fieldNo);
+  Sort_Block(fd_temp , copied_blocks , fieldNo, bufferSize);
 
 
   char * next;
   char * current = malloc(100*sizeof(char));
   strcpy(current, "temp0");
-  int level = 1;
+  int level = bufferSize;
   printf("\n=== STARTING SORTING FOR FIELD No. %d === \n\n",fieldNo );
   printf("Next Level of Sorting = %d\n", level );
   while (level < copied_blocks) {

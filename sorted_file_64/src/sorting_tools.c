@@ -54,15 +54,15 @@ int Compare(Record* record1,Record* record2,int fieldNo)
     return -2;
 }
 
-void Sort_Block(int fd_temp , int copied_blocks , int fieldNo)
+void Sort_Block(int fd_temp , int copied_blocks , int fieldNo, int bufferSize)
 {
-  char* data;
+  // char* data;
   int recs;
   int fd ;
-  int i, j, temp, swapped=1;
+  int i, j, k, temp, swapped=1;
 
-  BF_Block * block;
-  BF_Block_Init(&block);
+  // BF_Block * block;
+  // BF_Block_Init(&block);
 
   //BF_Block *tempblock;
   Record* table_recs;
@@ -71,38 +71,73 @@ void Sort_Block(int fd_temp , int copied_blocks , int fieldNo)
   Record record1, record2;
 
   //
-  for (i=1; i<copied_blocks; i++)
+
+  int block_index[bufferSize];
+  int block_count[bufferSize];
+  char * data[bufferSize];
+  BF_Block * block[bufferSize];
+  int sort_size = bufferSize;
+
+  for( i = 0 ; i < bufferSize ; i++)
   {
-    CALL_OR_DIE(BF_GetBlock(fd_temp, i ,block));
-    data = BF_Block_GetData(block);
-    memcpy(&recs , data , sizeof(int));
-    data += sizeof(int);
+    // printf("KANW GIA %d\n", i);
+    BF_Block_Init(&block[i]);
+  }
+
+  for (i=1; i<copied_blocks; i+=bufferSize)
+  {
+    if(bufferSize  > copied_blocks -i){
+      // printf("EDW %d\n", i );
+      sort_size = copied_blocks - i;
+    }
+    for(j = 0; j < (sort_size); j++){
+      // printf("Size %d, sunolo %d\n", i+j, bufferSize);
+      CALL_OR_DIE(BF_GetBlock(fd_temp, i+j ,block[j]));
+      data[j] = BF_Block_GetData(block[j]);
+      memcpy(&block_count[j] , data[j] , sizeof(int));
+      data[j] += sizeof(int);
+    }
     // table_recs = (Record *)data;
     swapped = 1;
     while (swapped)
     {
         // printf("RECS %d\n", recs );
       swapped =0;
-      for (j = 1; j<recs; j++)
+      previous = NULL;
+      for(j = 0; j < (sort_size); j++)
       {
-        current = data+ (record_size * (j));
-        previous = data+ (record_size * (j-1));
+        /*code */
+          for (k = 0; k<block_count[j]; k++)
+          {
+            current = data[j]+ (record_size * (k));
 
-        SR_ReadRecord(current, &record1);
-        SR_ReadRecord(previous, &record2);
-        if( Compare(&record1,&record2,fieldNo)==-1 )
-        {
-                    SR_WriteRecord(current, record2);
-                    SR_WriteRecord(previous, record1);
-					swapped=1;//egine allagh
-        }
+            if(previous != NULL)
+            {
+              SR_ReadRecord(current, &record1);
+              SR_ReadRecord(previous, &record2);
+              if( Compare(&record1,&record2,fieldNo)==-1 )
+              {
+                          SR_WriteRecord(current, record2);
+                          SR_WriteRecord(previous, record1);
+      					          swapped=1;//egine allagh
+              }
+            }
+            previous = current;
+
+          }
       }
     }
 
-    BF_Block_SetDirty(block);
-    CALL_OR_DIE(BF_UnpinBlock(block));
+
+    for(j = 0; j < (sort_size); j++){
+      BF_Block_SetDirty(block[j]);
+      CALL_OR_DIE(BF_UnpinBlock(block[j]));
+    }
   }
-  BF_Block_Destroy(&block);
+
+  for(j = 0; j < bufferSize; j++){
+    BF_Block_Destroy(&block[j]);
+  }
 
 }
 
