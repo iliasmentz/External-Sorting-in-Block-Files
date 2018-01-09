@@ -15,356 +15,304 @@
     }                         \
 }
 
-int Compare(Record* record1,Record* record2,int fieldNo)
-{   // girnaei 0 gia isothta,-1 an record1<record2,1 an record1>record2
-    if(fieldNo==F_ID){
-        if(record1->id==record2->id){
-            return 0;
-        }else if(record1->id<record2->id){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==F_NAME ){
-        if(!strcmp(record1->name,record2->name)){
-            return 0;
-        }else if(strcmp(record1->name,record2->name)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==F_SURNAME){
-        if(!strcmp(record1->surname,record2->surname)){
-            return 0;
-        }else if(strcmp(record1->surname,record2->surname)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }else if(fieldNo==F_CITY){
-        if(!strcmp(record1->city,record2->city)){
-            return 0;
-        }else if(strcmp(record1->city,record2->city)<0){
-            return -1;
-        }else{
-            return 1;
-        }
-    }
-    printf("ERROR to compare the records\n");
-    return -2;
+
+int record_size = 0;
+int max_records = 0;
+
+void SR_WriteRecord(void * data, Record record)
+{
+    /*write the id*/
+    memcpy(data, &record.id, sizeof(record.id));
+    /*write the name*/
+    data += sizeof(record.id);
+    strcpy(data, record.name);
+    /*write the surname*/
+    data += sizeof(record.name);
+    strcpy(data, record.surname);
+    /*write the city*/
+    data += sizeof(record.surname);
+    strcpy(data, record.city);
 }
 
-void Sort_Each_BufferSize_Blocks(int fd_temp , int copied_blocks , int fieldNo, int bufferSize)
+void SR_ReadRecord(void * data, Record * record)
 {
-  // char* data;
-  int recs;
-  int fd ;
-  int i, j, k, temp, swapped=1;
+    /*read id*/
+    memcpy(&record->id, data, sizeof(record->id));
 
-  // BF_Block * block;
-  // BF_Block_Init(&block);
-
-  //BF_Block *tempblock;
-  Record* table_recs;
-  void* current;
-  void* previous;
-  Record record1, record2;
-
-  //
-
-  int block_index[bufferSize];
-  int block_count[bufferSize];
-  char * data[bufferSize];
-  BF_Block * block[bufferSize];
-  int sort_size = bufferSize;
-
-  for( i = 0 ; i < bufferSize ; i++)
-  {
-    // printf("KANW GIA %d\n", i);
-    BF_Block_Init(&block[i]);
-  }
-
-  for (i=1; i<copied_blocks; i+=bufferSize)
-  {
-    if(bufferSize  > copied_blocks -i){
-      // printf("EDW %d\n", i );
-      sort_size = copied_blocks - i;
-    }
-    for(j = 0; j < (sort_size); j++){
-      // printf("Size %d, sunolo %d\n", i+j, bufferSize);
-      CALL_OR_DIE(BF_GetBlock(fd_temp, i+j ,block[j]));
-      data[j] = BF_Block_GetData(block[j]);
-      memcpy(&block_count[j] , data[j] , sizeof(int));
-      data[j] += sizeof(int);
-    }
-    // table_recs = (Record *)data;
-    swapped = 1;
-    while (swapped)
-    {
-        // printf("RECS %d\n", recs );
-      swapped =0;
-      previous = NULL;
-      for(j = 0; j < (sort_size); j++)
-      {
-        /*code */
-          for (k = 0; k<block_count[j]; k++)
-          {
-            current = data[j]+ (record_size * (k));
-
-            if(previous != NULL)
-            {
-              SR_ReadRecord(current, &record1);
-              SR_ReadRecord(previous, &record2);
-              if( Compare(&record1,&record2,fieldNo)==-1 )
-              {
-                          SR_WriteRecord(current, record2);
-                          SR_WriteRecord(previous, record1);
-      					          swapped=1;//egine allagh
-              }
-            }
-            previous = current;
-
-          }
-      }
-    }
-
-
-    for(j = 0; j < (sort_size); j++){
-      BF_Block_SetDirty(block[j]);
-      CALL_OR_DIE(BF_UnpinBlock(block[j]));
-    }
-  }
-
-  for(j = 0; j < bufferSize; j++){
-    BF_Block_Destroy(&block[j]);
-  }
-
+    /*read name*/
+    data += sizeof(record->id);
+    memcpy(&record->name, data, sizeof(record->name));
+    /*read surname*/
+    data += sizeof(record->name);
+    memcpy(&record->surname, data, sizeof(record->surname));
+    /*read surname*/
+    data += sizeof(record->surname);
+    memcpy(&record->city, data, sizeof(record->city));
 }
 
-void Copy_Block(int fd , int fd_temp)
-{
-  char* data;
-  char* tempdata;
-  int i, j, swapped=1;
+void SR_PrintRecords(Record record)	{
+	printf("|ID: %8d|, |Name: %15s|, |Surname: %15s|, |City: %20s| \n",
+     record.id, record.name, record.surname, record.city);
+}
+
+SR_ErrorCode SR_Init() {
+  // Your code goes here
+
+  Record record;
+  record_size = sizeof(record.id)+sizeof(record.name)+sizeof(record.surname)+sizeof(record.city);
+  max_records = (BF_BLOCK_SIZE - sizeof(int))/record_size;
+
+  return SR_OK;
+}
+
+SR_ErrorCode SR_CreateFile(const char *fileName) {
+  // Your code goes here
   BF_Block * block;
   BF_Block_Init(&block);
-  BF_Block *tempblock;
-  int copied_blocks;
-  //copy the original file to the temporary BF_OpenFile
+  int fd;
 
-  CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks));
-  BF_Block_Init(&tempblock);
+  CALL_OR_DIE(BF_CreateFile(fileName));
+  CALL_OR_DIE(BF_OpenFile(fileName, &fd));
+  CALL_OR_DIE(BF_AllocateBlock(fd, block));
 
-  for (i=0; i<copied_blocks; i++)
-  {
-    CALL_OR_DIE(BF_GetBlock(fd , i , block));
-    data = BF_Block_GetData(block);
 
-    CALL_OR_DIE(BF_AllocateBlock(fd_temp,tempblock));
-    CALL_OR_DIE(BF_GetBlock(fd_temp , i , tempblock));
-    tempdata = BF_Block_GetData(tempblock);
+  char * data = BF_Block_GetData(block);
 
-    memcpy(tempdata , data , BF_BLOCK_SIZE);
-
-    BF_Block_SetDirty(tempblock);
-    CALL_OR_DIE(BF_UnpinBlock(tempblock));
-    CALL_OR_DIE(BF_UnpinBlock(block));
-
-  }
-
-  // SR_PrintAllEntries(fd_temp);
+  /*write the metadata*/
+  memcpy(data, "This is a sort file", 20);
+  /*changes were made so we make it dirty before the unpin*/
+  BF_Block_SetDirty(block);
+  CALL_OR_DIE(BF_UnpinBlock(block));
+  /*close the file descriptor*/
+  CALL_OR_DIE(BF_CloseFile(fd));
   BF_Block_Destroy(&block);
-  BF_Block_Destroy(&tempblock);
+  return SR_OK;
+}
+
+SR_ErrorCode SR_OpenFile(const char *fileName, int *fileDesc) {
+  // Your code goes here
+  BF_Block * block;
+  BF_Block_Init(&block);
+
+  // write your code here
+  /*Open the block file*/
+  CALL_OR_DIE(BF_OpenFile(fileName, fileDesc));
+
+  /*Get its block*/
+  CALL_OR_DIE(BF_GetBlock(*fileDesc, 0, block));
+
+  /*Get pointer to its data*/
+  char * data = BF_Block_GetData(block);
+
+  int result =(memcmp(data, "This is a sort file", 20)==0);
+  /*unpin the block*/
+  CALL_OR_DIE(BF_UnpinBlock(block));
+
+  BF_Block_Destroy(&block);
+
+  if(result)
+    return SR_OK;
+  else
+    return SR_ERROR;
+
 
 }
 
-char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize)
-{
-    char *new_file=malloc(sizeof(char)*100);
-    sprintf(new_file,"temp_%d_sorted",level);
-
-    SR_CreateFile(new_file);
-
-    BF_Block * block;
-    BF_Block_Init(&block);
-    BF_Block * new_block;
-    BF_Block_Init(&new_block);
-
-    int new_file_id ;
-    // printf("New file: %s\n", new_file);
-    CALL_OR_DIE(BF_OpenFile(new_file, &new_file_id));
+SR_ErrorCode SR_CloseFile(int fileDesc) {
+  // Your code goes here
+  // write your code here
+  CALL_OR_DIE(BF_CloseFile(fileDesc));
+  /*Destroy the block we created in the HP_Init*/
+  /*we could create a function named HP_Close but we couldn't
+  change the hp_main in order to call it */
+  //BF_Block_Destroy(&block);
 
 
-    CALL_OR_DIE(BF_AllocateBlock(new_file_id, new_block));
 
-    char * data;
-    char * new_data;
+  return SR_OK;
+}
 
-    new_data = BF_Block_GetData(new_block);
-    int new_count = 0;
-    memcpy(new_data, &new_count, sizeof(int));
+SR_ErrorCode SR_InsertEntry(int fileDesc, Record record) {
+  // Your code goes here
+  BF_Block * block;
+  BF_Block_Init(&block);
+  /*We get the block count in order to find the last one*/
+  int count;
 
+  CALL_OR_DIE(BF_GetBlockCounter(fileDesc, &count));
 
-    int count;
-    CALL_OR_DIE(BF_GetBlockCounter(file_id, &count));
+  if(record_size <= 0)
+    return SR_ERROR;
 
-    // int index[bufferSize-1];
+  char* data;
+  if (count > 1)
+  {   /* Get the Last Block*/
+      CALL_OR_DIE(BF_GetBlock(fileDesc, count-1, block));
+      data = BF_Block_GetData(block);
+      int record_count;
+      memcpy(&record_count, data, sizeof(int));
+      /*We check if the block has space for new record*/
+      if(record_count < max_records)
+      {  /*Go to the first space available*/
+          /*update the counter*/
+          record_count++;
+          memcpy(data, &record_count, sizeof(int));
+          /*move our pointer to the position of the next available record*/
+          data +=sizeof(int);
+          data += ((record_count-1)*record_size);
+          /*write the record*/
+          SR_WriteRecord(data, record);
+          /*changes were made so we make it dirty before the unpin*/
+          BF_Block_SetDirty(block);
+          CALL_OR_DIE(BF_UnpinBlock(block));
 
-    int i, j, temp;
+          return SR_OK;
+      }
+      /*no changes cause its full, so just unpin it*/
+      CALL_OR_DIE(BF_UnpinBlock(block));
+  }
 
+  /*We need a new Block*/
 
-    heap_node node;
-    node.record = malloc(sizeof(Record));
-    for ( i = 1; i < count; i+= (bufferSize-1)*level) {
+  /*New Block Allocation*/
+  CALL_OR_DIE(BF_AllocateBlock(fileDesc, block));
+  data = BF_Block_GetData(block);
+  /*write the counter*/
+  int one = 1;
+  memcpy(data, &one, sizeof(int));
+  /*write the record*/
+  data += sizeof(int);
+  SR_WriteRecord(data,record);
+  /*changes were made so we make it dirty before the unpin*/
+  BF_Block_SetDirty(block);
+  CALL_OR_DIE(BF_UnpinBlock(block));
+  BF_Block_Destroy(&block);
 
-        heap * my_heap = create_heap(bufferSize-1, level, fieldNo);
+  return SR_OK;
+}
 
-        for (j = 0; j < bufferSize-1; j ++) {
-            /* code */
-            if(i+(j*level) >= count)
-                break;
-            // printf("for block %d\n", i+(j*level));
-            CALL_OR_DIE(BF_GetBlock(file_id, i+(j*level), block));
-            data = BF_Block_GetData(block);
+SR_ErrorCode SR_SortedFile(
+  const char* input_filename,
+  const char* output_filename,
+  int fieldNo,
+  int bufferSize
+) {
 
-            node.block_num = i+(j*level);
-            node.block_pos = 1;
-            memcpy(&node.block_records, data, sizeof(int));
-
-            data += sizeof(int);
-
-            SR_ReadRecord(data, node.record);
-            // printf("NODE-> block_num %d Record-> %s %s\n", node.block_num, node.record->name, node.record->surname);
-
-            add_heap(my_heap, &node);
-            CALL_OR_DIE(BF_UnpinBlock(block));
-
-        }
-
-        heap_node * to_be_written;
-        heap_node * to_be_stored;
-
-        while(!is_empty_heap(my_heap))
-        {
-            /* pop the min value */
-            to_be_written = pop_heap(my_heap);
-
-            // printf("EKANA POP ME POS %d APO TO BLOCK %d\n", to_be_written->block_pos, to_be_written->block_num);
-            if(new_count == max_records){
-                /* our block is full and we need to create a new one */
-                BF_Block_SetDirty(new_block);
-                CALL_OR_DIE(BF_UnpinBlock(new_block));
-
-                int temp;
-                CALL_OR_DIE(BF_GetBlockCounter(new_file_id, &temp));
-
-                // printf("New write block %d\n", temp );
-                CALL_OR_DIE(BF_AllocateBlock(new_file_id, new_block));
-                new_data = BF_Block_GetData(new_block);
-                new_count =0;
-                memcpy(data, &new_count, sizeof(int));
-            }
-
-            if (new_data==NULL) {
-                /* code */
-                printf("NULL\n" );
-                exit(1);
-            }
-            /*write the record in the new file */
-            SR_WriteRecord(new_data+sizeof(int)+(record_size*new_count), *(to_be_written->record));
-            new_count ++;
-            memcpy(new_data, &new_count, sizeof(int));
-            free(to_be_written->record);
-
-            to_be_stored = malloc(sizeof(heap_node));
-            to_be_stored->record = NULL;
-
-            to_be_stored->block_num = to_be_written->block_num;
-            to_be_stored->block_records = to_be_written->block_records;
-            to_be_stored->block_pos = to_be_written->block_pos;
-            /*get next value from the block we just got the value */
-            // printf("BLOCK REC %d \n", to_be_written->block_num);
-            int read_entry=1;
-            if (to_be_stored->block_pos >= to_be_stored->block_records) {
-
-                /* we need the next block from the sorted ones */
-                // printf("wra na allaksw block\n" );
-                if(to_be_stored->block_num%level ==0 || to_be_stored->block_num==count-1){
-                    /* end of sorted blocks */
-                    // printf("Telos block\n" );
-                    read_entry =0;
-                    to_be_stored->record = NULL;
-                    // to_be_stored->block_num = count;
-
-                }
-                else {
-                    /*get the next sorted block */
-                    // printf("block pou eixa %d\n", to_be_stored->block_num);
-                    to_be_stored->block_num ++;
-
-                    // printf("KATHARIZW POS\n" );
-                    to_be_stored->block_pos = 0;
-                    // printf("1\n" );
-                    // printf("block %d\n", to_be_stored->block_num );
-                    if (to_be_stored->block_num < count) {
-                        /* code */
-                        CALL_OR_DIE(BF_GetBlock(file_id, to_be_stored->block_num, block));
-                        data = BF_Block_GetData(block);
-                        memcpy(&to_be_stored->block_records, data, sizeof(int));
-
-                        CALL_OR_DIE(BF_UnpinBlock(block));
-                    }
-
-
-                }
-            }
-
-            if(read_entry){
-                CALL_OR_DIE(BF_GetBlock(file_id, to_be_stored->block_num, block));
-                data = BF_Block_GetData(block);
-
-                to_be_stored->record = malloc(sizeof(Record));
-
-
-                // printf("VBAZW NODE-> block_num %d Record-> %s %s\n", to_be_written->block_num, to_be_written->record->name, to_be_written->record->surname);
-                // to_be_stored->record = malloc(sizeof(Record));
-                // printf("THA PARW TOO STOIXEIO %d gia block %d \n", to_be_stored->block_pos, to_be_stored->block_num );
-                SR_ReadRecord(data+sizeof(int)+(record_size*to_be_stored->block_pos), to_be_stored->record);
-                // printf("VAZW NODE-> block_num %d Record-> %s %s\n", to_be_stored->block_num, to_be_stored->record->name, to_be_written->record->surname);
-                // printf("prin AUKSANW Pos %d\n", to_be_stored->block_pos);
-
-                to_be_stored->block_pos++;
-                //                printf("AUKSANW Pos %d\n", to_be_written->block_pos);
-                CALL_OR_DIE(BF_UnpinBlock(block));
-                //                exit(1);
-
-            }
-
-            // printf("prin csall %d\n", to_be_written->block_pos);
-            update_heap(my_heap, to_be_stored);
-            if (to_be_stored->record!=NULL) {
-                /* code */
-                free(to_be_stored->record);
-            }
-            if (to_be_stored !=NULL) {
-                /* code */
-                free(to_be_stored);
-            }
-
-        }
-
-        delete_heap(&my_heap);
-        // perror("ESPASA");
-        BF_Block_SetDirty(new_block);
-        CALL_OR_DIE(BF_UnpinBlock(new_block));
+    if (bufferSize < 3 || bufferSize > BF_BUFFER_SIZE) {
+        /* code */
+        printf("Error: The number of blocks you want to use use is either too big or too small\n" );
+        return SR_ERROR;
     }
 
-    free(node.record);
+    // Your code goes here
+  BF_Block * block;
+  BF_Block_Init(&block);
 
-    BF_Block_Destroy(&block);
-    BF_Block_Destroy(&new_block);
-    CALL_OR_DIE(BF_CloseFile(new_file_id));
+  int fd , fd_temp;
+  int i, j, jj, temp, swapped=1;
+  int input_file_id , copied_file_id , sorted_file_id , copied_blocks;
+  BF_Block *tempblock;
+  //copy the original file to the temporary BF_OpenFile
 
-    return new_file;
+  CALL_OR_DIE(BF_OpenFile(input_filename , &fd));
+  CALL_OR_DIE(BF_CreateFile("temp0"));
+  CALL_OR_DIE(BF_OpenFile("temp0" , &fd_temp));
+  Copy_Block(fd , fd_temp);
+  CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks))
+  CALL_OR_DIE(SR_CloseFile(fd));
+  fd = fd_temp;
 
+  Sort_Each_BufferSize_Blocks(fd_temp , copied_blocks , fieldNo, bufferSize);
+
+
+  char * next;
+  char * current = malloc(100*sizeof(char));
+  strcpy(current, "temp0");
+  next = current;
+  int level = bufferSize;
+  printf("\n=== STARTING SORTING FOR FIELD No. %d === \n\n",fieldNo );
+  printf("Next Level of Sorting = %d\n", level );
+  while (level < copied_blocks) {
+      /* sort by level */
+
+    next = sort_by_level(fd, level, fieldNo, bufferSize);
+    CALL_OR_DIE(BF_CloseFile(fd));
+
+    level *= bufferSize-1;
+    if(level < copied_blocks ){
+
+        remove(current);
+        free(current);
+        current = next;
+
+        CALL_OR_DIE(BF_OpenFile(current, &fd));
+        printf("Next Level of Sorting = %d\n", level );
+
+    }
+    else {
+        remove(current);
+        free(current);
+        current = next;
+
+        CALL_OR_DIE(BF_OpenFile(current, &fd));
+        next = sort_by_level(fd, level, fieldNo, bufferSize);
+        remove(current);
+        free(current);
+
+        break;
+
+    }
+
+  }
+
+  rename(next, output_filename);
+  free(next);
+
+
+  // SR_PrintAllEntries(fd);
+
+  BF_Block_Destroy(&block);
+  CALL_OR_DIE(BF_CloseFile(fd));
+  printf("=== END OF SORTING FOR FIELD No. %d === \n\n", fieldNo);
+
+  return SR_OK;
+}
+
+SR_ErrorCode SR_PrintAllEntries(int fileDesc) {
+  // Your code goes here
+
+  BF_Block * block;
+  BF_Block_Init(&block);
+
+  int i, j;
+
+  int block_count;
+  int record_count;
+  Record record;
+  char * data;
+
+  CALL_OR_DIE(BF_GetBlockCounter(fileDesc, &block_count));
+  /*we ignore the 0 block cause its the one with the metadata*/
+  for(i = 1; i < block_count; i++)
+  {
+      /*get the block*/
+      CALL_OR_DIE(BF_GetBlock(fileDesc, i, block));
+      data = BF_Block_GetData(block);
+      /*get the record count of this block*/
+      memcpy(&record_count, data, sizeof(int));
+      /*go to 1st record*/
+      data += sizeof(int);
+      for( j = 0; j < record_count; j++ )
+      {
+          SR_ReadRecord(data, &record);
+          SR_PrintRecords(record);
+          /*next record*/
+          data +=record_size;
+      }
+      /*unpin this block as we read all his records*/
+      CALL_OR_DIE(BF_UnpinBlock(block));
+  }
+  BF_Block_Destroy(&block);
+
+  return SR_OK;
 }

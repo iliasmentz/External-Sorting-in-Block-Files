@@ -11,15 +11,15 @@ extern int record_size;
 extern int max_records;
 
 typedef enum SR_ErrorCode {
-  SR_OK,
-  SR_ERROR
+    SR_OK,
+    SR_ERROR
 } SR_ErrorCode;
 
 typedef struct Record {
-	int id;
-	char name[15];
-	char surname[20];
-	char city[20];
+    int id;
+    char name[15];
+    char surname[20];
+    char city[20];
 } Record;
 
 void SR_WriteRecord(void * data, Record record);
@@ -39,8 +39,8 @@ SR_ErrorCode SR_Init();
  * διαφορετική περίπτωση κάποιος κωδικός λάθους.
  */
 SR_ErrorCode SR_CreateFile(
-	const char *fileName		/* όνομα αρχείου */
-	);
+    const char *fileName		/* όνομα αρχείου */
+);
 
 /*
  * Η συνάρτηση SR_OpenFile ανοίγει το αρχείο με όνομα filename και διαβάζει
@@ -52,9 +52,9 @@ SR_ErrorCode SR_CreateFile(
  * ταξινόμησης, τότε αυτό θεωρείται επίσης περίπτωση σφάλματος.
  */
 SR_ErrorCode SR_OpenFile(
-	const char *fileName, 		/* όνομα αρχείου */
-  int *fileDesc             /* αναγνωριστικός αριθμός ανοίγματος αρχείου */
-	);
+    const char *fileName, 		/* όνομα αρχείου */
+    int *fileDesc             /* αναγνωριστικός αριθμός ανοίγματος αρχείου */
+);
 
 /*
  * Η συνάρτηση SR_CloseFile κλείνει το αρχείο που προσδιορίζεται από τον
@@ -63,8 +63,8 @@ SR_ErrorCode SR_OpenFile(
  * κωδικός λάθους.
  */
 SR_ErrorCode SR_CloseFile(
-	int fileDesc 		/* αναγνωριστικός αριθμός ανοίγματος αρχείου */
-	);
+    int fileDesc 		/* αναγνωριστικός αριθμός ανοίγματος αρχείου */
+);
 
 /*
  * Η συνάρτηση SR_InsertEntry χρησιμοποιείται για την εισαγωγή μίας
@@ -75,9 +75,9 @@ SR_ErrorCode SR_CloseFile(
  * επιστρέφεται SR_OK, ενώ σε διαφορετική περίπτωση κάποιος κωδικός λάθους.
  */
 SR_ErrorCode SR_InsertEntry(
-	int fileDesc,		/* αναγνωριστικός αριθμός ανοίγματος αρχείου */
-	Record record		/* δομή που προσδιορίζει την εγγραφή */
-	);
+    int fileDesc,		/* αναγνωριστικός αριθμός ανοίγματος αρχείου */
+    Record record		/* δομή που προσδιορίζει την εγγραφή */
+);
 
 /*
  * Η συνάρτηση αυτή ταξινομεί ένα BF αρχείο με όνομα input_​fileName ως προς το
@@ -100,11 +100,11 @@ SR_ErrorCode SR_InsertEntry(
  *      επιστρέφεται κωδικός λάθους.
  */
 SR_ErrorCode SR_SortedFile(
-  const char* input_filename,   /* όνομα αρχείου προς ταξινόμηση */
-  const char* output_filename,  /* όνομα του τελικού ταξινομημένου αρχείου */
-  int fieldNo,                  /* αύξων αριθμός πεδίου προς ταξινόμηση */
-  int bufferSize            /* Το πλήθος των block μνήμης που έχετε διαθέσιμα */
-  );
+    const char* input_filename,   /* όνομα αρχείου προς ταξινόμηση */
+    const char* output_filename,  /* όνομα του τελικού ταξινομημένου αρχείου */
+    int fieldNo,                  /* αύξων αριθμός πεδίου προς ταξινόμηση */
+    int bufferSize            /* Το πλήθος των block μνήμης που έχετε διαθέσιμα */
+);
 
 /*
  * Η συνάρτηση SR_PrintAllEntries χρησιμοποιείται για την εκτύπωση όλων των
@@ -114,7 +114,7 @@ SR_ErrorCode SR_SortedFile(
  * ενώ σε διαφορετική περίπτωση κάποιος κωδικός λάθους.
  */
 SR_ErrorCode SR_PrintAllEntries(
-  int fileDesc		/* αναγνωριστικός αριθμός ανοίγματος αρχείου */
-  );
+    int fileDesc		/* αναγνωριστικός αριθμός ανοίγματος αρχείου */
+);
 
 #endif // SORT_FILE_H

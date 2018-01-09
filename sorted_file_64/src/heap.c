@@ -38,7 +38,7 @@ void update_heap(heap * my_heap, heap_node * node)
     int i;
     for ( i = 1; i < my_heap->size; i++)
     {
-        if(node->record==NULL){
+        if(node->record==NULL) {
             printf("NULL Gia i = %d kai size %d\n", i, my_heap->size);
         }
         if (Compare(my_heap->values[i].record, node->record, my_heap->fieldNo)==1) {
@@ -84,7 +84,7 @@ void add_heap(heap * my_heap, heap_node * node)
         my_heap->values[i].block_num = node->block_num;
         my_heap->values[i].block_records = node->block_records;
     }
-    else{
+    else {
 
         memmove(&my_heap->values[i+1], &my_heap->values[i], (my_heap->size - i)*sizeof(heap_node));
         my_heap->values[i].record = malloc(sizeof(Record));

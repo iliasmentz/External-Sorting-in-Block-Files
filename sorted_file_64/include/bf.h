@@ -10,20 +10,20 @@ extern "C" {
 #define BF_MAX_OPEN_FILES 100 /* Ο μέγιστος αριθμός ανοικτών αρχείων */
 
 typedef enum BF_ErrorCode {
-  BF_OK,
-  BF_OPEN_FILES_LIMIT_ERROR,     /* Υπάρχουν ήδη BF_MAX_OPEN_FILES αρχεία ανοικτά */
-  BF_INVALID_FILE_ERROR,         /* Ο αναγνωριστικός αριθμός αρχείου δεν αντιστιχεί σε κάποιο ανοιχτό αρχείο */
-  BF_ACTIVE_ERROR,               /* Το επίπεδο BF είναι ενεργό και δεν μπορεί να αρχικοποιηθεί */
-  BF_FILE_ALREADY_EXISTS,        /* Το αρχείο δεν μπορεί να δημιουργιθεί γιατι υπάρχει ήδη */
-  BF_FULL_MEMORY_ERROR,          /* Η μνήμη έχει γεμίσει με ενεργά block */
-  BF_INVALID_BLOCK_NUMBER_ERROR, /* Το block που ζητήθηκε δεν υπάρχει στο αρχείο */
-  BF_AVAILABLE_PIN_BLOCKS_ERROR,
-  BF_ERROR
+    BF_OK,
+    BF_OPEN_FILES_LIMIT_ERROR,     /* Υπάρχουν ήδη BF_MAX_OPEN_FILES αρχεία ανοικτά */
+    BF_INVALID_FILE_ERROR,         /* Ο αναγνωριστικός αριθμός αρχείου δεν αντιστιχεί σε κάποιο ανοιχτό αρχείο */
+    BF_ACTIVE_ERROR,               /* Το επίπεδο BF είναι ενεργό και δεν μπορεί να αρχικοποιηθεί */
+    BF_FILE_ALREADY_EXISTS,        /* Το αρχείο δεν μπορεί να δημιουργιθεί γιατι υπάρχει ήδη */
+    BF_FULL_MEMORY_ERROR,          /* Η μνήμη έχει γεμίσει με ενεργά block */
+    BF_INVALID_BLOCK_NUMBER_ERROR, /* Το block που ζητήθηκε δεν υπάρχει στο αρχείο */
+    BF_AVAILABLE_PIN_BLOCKS_ERROR,
+    BF_ERROR
 } BF_ErrorCode;
 
 typedef enum ReplacementAlgorithm {
-  LRU,
-  MRU
+    LRU,
+    MRU
 } ReplacementAlgorithm;
 
 
