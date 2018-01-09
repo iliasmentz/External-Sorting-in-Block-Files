@@ -25,7 +25,7 @@ int is_empty_heap(heap * my_heap);
 void delete_heap(heap ** my_heap);
 
 int Compare(Record* record1,Record* record2,int fieldNo);
-void Sort_Block(int fd_temp , int copied_blocks , int fieldNo, int bufferSize);
+void Sort_Each_BufferSize_Blocks(int fd_temp , int copied_blocks , int fieldNo, int bufferSize);
 void Copy_Block(int fd , int fd_temp);
 char * sort_by_level(int file_id, int level, int fieldNo, int bufferSize);
 

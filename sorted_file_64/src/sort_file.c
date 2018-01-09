@@ -219,18 +219,16 @@ SR_ErrorCode SR_SortedFile(
   CALL_OR_DIE(BF_OpenFile("temp0" , &fd_temp));
   Copy_Block(fd , fd_temp);
   CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks))
-  // printf("KLEINW TO %d\n",fd );
   CALL_OR_DIE(SR_CloseFile(fd));
   fd = fd_temp;
-  //
-  // printf("OK 2\n" );
-  //
-  Sort_Block(fd_temp , copied_blocks , fieldNo, bufferSize);
+
+  Sort_Each_BufferSize_Blocks(fd_temp , copied_blocks , fieldNo, bufferSize);
 
 
   char * next;
   char * current = malloc(100*sizeof(char));
   strcpy(current, "temp0");
+  next = current;
   int level = bufferSize;
   printf("\n=== STARTING SORTING FOR FIELD No. %d === \n\n",fieldNo );
   printf("Next Level of Sorting = %d\n", level );
@@ -258,18 +256,17 @@ SR_ErrorCode SR_SortedFile(
 
         CALL_OR_DIE(BF_OpenFile(current, &fd));
         next = sort_by_level(fd, level, fieldNo, bufferSize);
-
-        rename(next, output_filename);
-        free(next);
         remove(current);
-
-
         free(current);
+
         break;
 
     }
 
   }
+
+  rename(next, output_filename);
+  free(next);
 
 
   // SR_PrintAllEntries(fd);

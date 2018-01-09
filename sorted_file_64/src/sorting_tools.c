@@ -54,7 +54,7 @@ int Compare(Record* record1,Record* record2,int fieldNo)
     return -2;
 }
 
-void Sort_Block(int fd_temp , int copied_blocks , int fieldNo, int bufferSize)
+void Sort_Each_BufferSize_Blocks(int fd_temp , int copied_blocks , int fieldNo, int bufferSize)
 {
   // char* data;
   int recs;
