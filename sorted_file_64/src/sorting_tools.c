@@ -50,8 +50,8 @@ int Compare(Record* record1,Record* record2,int fieldNo)
             return 1;
         }
     }
-    printf("ERROR to compare the records\n");
-    return -2;
+    printf("Error: Wrong Field Number\n");
+    exit(-1);
 }
 
 void Sort_Each_BufferSize_Blocks(int fd_temp , int copied_blocks , int fieldNo, int bufferSize)
