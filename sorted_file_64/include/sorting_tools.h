@@ -24,6 +24,9 @@ void add_heap(heap * my_heap, heap_node * node);
 int is_empty_heap(heap * my_heap);
 void delete_heap(heap ** my_heap);
 
+int partition(char ** data, int low, int high, int fieldNo);
+void quicksort(char ** data, int low, int high, int fieldNo);
+
 int Compare(Record* record1,Record* record2,int fieldNo);
 void Sort_Each_BufferSize_Blocks(int fd_temp , int copied_blocks , int fieldNo, int bufferSize);
 void Copy_Block(int fd , int fd_temp);
