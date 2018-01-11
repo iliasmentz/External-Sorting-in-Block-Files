@@ -61,16 +61,10 @@ void Sort_Each_BufferSize_Blocks(int fd_temp , int copied_blocks , int fieldNo, 
   int fd ;
   int i, j, k, temp, swapped=1;
 
-  // BF_Block * block;
-  // BF_Block_Init(&block);
-
-  //BF_Block *tempblock;
   Record* table_recs;
   void* current;
   void* previous;
   Record record1, record2;
-
-  //
 
   int block_index[bufferSize];
   int block_count[bufferSize];
@@ -87,49 +81,18 @@ void Sort_Each_BufferSize_Blocks(int fd_temp , int copied_blocks , int fieldNo, 
   for (i=1; i<copied_blocks; i+=bufferSize)
   {
     if(bufferSize  > copied_blocks -i){
-      // printf("EDW %d\n", i );
       sort_size = copied_blocks - i;
     }
-    // printf("Starting block %d end %d\n", i, i+sort_size );
+
     int total_records=0;
     for(j = 0; j < (sort_size); j++){
-      // printf("Size %d, sunolo %d\n", i+j, bufferSize);
       CALL_OR_DIE(BF_GetBlock(fd_temp, i+j ,block[j]));
       data[j] = BF_Block_GetData(block[j]);
       memcpy(&block_count[j] , data[j] , sizeof(int));
       total_records += block_count[j];
       data[j] += sizeof(int);
     }
-    // table_recs = (Record *)data;
-    // swapped = 1;
-    // while (swapped)
-    // {
-    //     // printf("RECS %d\n", recs );
-    //   swapped =0;
-    //   previous = NULL;
-    //   for(j = 0; j < (sort_size); j++)
-    //   {
-    //     /*code */
-    //       for (k = 0; k<block_count[j]; k++)
-    //       {
-    //         current = data[j]+ (record_size * (k));
-    //
-    //         if(previous != NULL)
-    //         {
-    //           SR_ReadRecord(current, &record1);
-    //           SR_ReadRecord(previous, &record2);
-    //           if( Compare(&record1,&record2,fieldNo)==-1 )
-    //           {
-    //                       SR_WriteRecord(current, record2);
-    //                       SR_WriteRecord(previous, record1);
-    //   					          swapped=1;//egine allagh
-    //           }
-    //         }
-    //         previous = current;
-    //
-    //       }
-    //   }
-    // }
+
     quicksort(data, 0, total_records-1, fieldNo);
 
     for(j = 0; j < (sort_size); j++){
