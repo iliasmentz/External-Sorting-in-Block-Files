@@ -16,7 +16,7 @@
 }
 
 int Compare(Record* record1,Record* record2,int fieldNo)
-{   // girnaei 0 gia isothta,-1 an record1<record2,1 an record1>record2
+{   /* compare function 0 for equality, -1 if record1<record2, 1 if record1>record2 */
     if(fieldNo==F_ID){
         if(record1->id==record2->id){
             return 0;
