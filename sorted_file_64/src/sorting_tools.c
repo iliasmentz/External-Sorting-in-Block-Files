@@ -90,6 +90,7 @@ void Sort_Each_BufferSize_Blocks(int fd_temp , int copied_blocks , int fieldNo, 
       // printf("EDW %d\n", i );
       sort_size = copied_blocks - i;
     }
+    // printf("Starting block %d end %d\n", i, i+sort_size );
     int total_records=0;
     for(j = 0; j < (sort_size); j++){
       // printf("Size %d, sunolo %d\n", i+j, bufferSize);
@@ -157,10 +158,10 @@ int partition(char ** data, int low, int high,  int fieldNo)
     {
         pos_1 =data[(j/max_records)] + (record_size * (j%max_records));
         SR_ReadRecord(pos_1, &record1);
-        if(Compare(&piv_record,&record1,fieldNo)>=0)
+        if(Compare(&piv_record,&record1,fieldNo)==1)
         {
             i++;
-            pos_2 = data[(i/max_records)] + (record_size * (j%max_records));
+            pos_2 = data[(i/max_records)] + (record_size * (i%max_records));
             SR_ReadRecord(pos_2, &record2);
 
             SR_WriteRecord(pos_1, record2);
