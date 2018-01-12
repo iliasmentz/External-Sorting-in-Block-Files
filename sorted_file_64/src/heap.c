@@ -6,7 +6,7 @@
 #include "sorting_tools.h"
 
 heap * create_heap(int size, int level, int fieldNo)
-{
+{   /* creates a heap with null records and size 0 */
     heap * my_heap = malloc(sizeof(heap));
 
     my_heap->values = malloc(size*(sizeof(heap_node)));
@@ -24,13 +24,19 @@ heap * create_heap(int size, int level, int fieldNo)
 
 heap_node * pop_heap(heap * my_heap)
 {
-    // printf("POP\n" );
+    /* we pop the smaller record as we need to
+    get the smaller one and the heap is sorted */
     return &my_heap->values[0];
 }
 
 void update_heap(heap * my_heap, heap_node * node)
 {
+    /* this function is called after the pop and we insert an
+    element from the block that we just poped */
     if (node->record == NULL) {
+        /* if we get a null record to update the heap
+        we know that means that the block that we just poped
+        has not any other records left to be written */
         my_heap->size--;
         memmove(my_heap->values, &my_heap->values[1], (my_heap->size)*sizeof(heap_node));
         return;
@@ -38,16 +44,13 @@ void update_heap(heap * my_heap, heap_node * node)
     int i;
     for ( i = 1; i < my_heap->size; i++)
     {
-        if(node->record==NULL) {
-            printf("NULL Gia i = %d kai size %d\n", i, my_heap->size);
-        }
+
         if (Compare(my_heap->values[i].record, node->record, my_heap->fieldNo)==1) {
             break;
         }
     }
-    // printf("THA TO VALW STIN THESI %d\n", i-1 );
-    // printf("KANW UPDATE NODE-> pos %d  block %d Record-> %s %s\n", node->block_pos, node->block_num, node->record->name, node->record->surname);
-    // printf("METAKINISI TWN %d KAI SIZE %d\n", (my_heap->size -(my_heap->size - (i -1))), i);
+
+
     memcpy(&my_heap->values[0], &my_heap->values[1], (i -1)*sizeof(heap_node));
 
     my_heap->values[i-1].record = malloc(sizeof(Record));
