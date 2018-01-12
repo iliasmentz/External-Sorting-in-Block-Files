@@ -120,14 +120,7 @@ SR_ErrorCode SR_OpenFile(const char *fileName, int *fileDesc) {
 
 SR_ErrorCode SR_CloseFile(int fileDesc) {
     // Your code goes here
-    // write your code here
     CALL_OR_DIE(BF_CloseFile(fileDesc));
-    /*Destroy the block we created in the HP_Init*/
-    /*we could create a function named HP_Close but we couldn't
-    change the hp_main in order to call it */
-    //BF_Block_Destroy(&block);
-
-
 
     return SR_OK;
 }
@@ -136,6 +129,7 @@ SR_ErrorCode SR_InsertEntry(int fileDesc, Record record) {
     // Your code goes here
     BF_Block * block;
     BF_Block_Init(&block);
+
     /*We get the block count in order to find the last one*/
     int count;
 
@@ -198,13 +192,13 @@ SR_ErrorCode SR_SortedFile(
     int bufferSize
 ) {
 
+    // Your code goes here
     if (bufferSize < 3 || bufferSize > BF_BUFFER_SIZE) {
-        /* code */
+        /* check if bufferSize is correct */
         printf("Error: The number of blocks you want to use use is either too big or too small\n" );
         return SR_ERROR;
     }
 
-    // Your code goes here
     BF_Block * block;
     BF_Block_Init(&block);
 
@@ -215,47 +209,63 @@ SR_ErrorCode SR_SortedFile(
     //copy the original file to the temporary BF_OpenFile
 
     CALL_OR_DIE(BF_OpenFile(input_filename , &fd));
+
+    /* create the temp file for first part of the Sorting */
     CALL_OR_DIE(BF_CreateFile("temp0"));
     CALL_OR_DIE(BF_OpenFile("temp0" , &fd_temp));
+
+    /* copy the data from the unsorted one */
     Copy_Block(fd , fd_temp);
+
     CALL_OR_DIE(BF_GetBlockCounter(fd,&copied_blocks))
     CALL_OR_DIE(SR_CloseFile(fd));
+
+
     fd = fd_temp;
 
+    /* sort each set of bufferSize blocks using QuickSort */
+    int level = bufferSize;
+    printf("\n==== STARTING SORTING FOR FIELD No. %d ==== \n",fieldNo );
+    printf("\n=== SORTING EACH SET OF %d BLOCKS USING QUICKSORT === \n",bufferSize);
     Sort_Each_BufferSize_Blocks(fd_temp , copied_blocks , fieldNo, bufferSize);
-
-
+    printf("=== FINISHED QUICKSORT === \n\n" );
+    /* second part of the algorithm */
     char * next;
     char * current = malloc(100*sizeof(char));
     strcpy(current, "temp0");
     next = current;
-    int level = bufferSize;
-    printf("\n=== STARTING SORTING FOR FIELD No. %d === \n\n",fieldNo );
-    printf("Next Level of Sorting = %d\n", level );
+
+    printf("=== STARTING SORTING WITH LEVELS ===\n" );
     while (level < copied_blocks) {
         /* sort by level */
+        printf("= Next Level of Sorting: %d blocks =\n", level*(bufferSize-1) );
 
         next = sort_by_level(fd, level, fieldNo, bufferSize);
         CALL_OR_DIE(BF_CloseFile(fd));
 
         level *= bufferSize-1;
         if(level < copied_blocks ) {
-
+            /*remove the previous temp file */
             remove(current);
             free(current);
             current = next;
 
             CALL_OR_DIE(BF_OpenFile(current, &fd));
-            printf("Next Level of Sorting = %d\n", level );
+            // printf("Next Level of Sorting = %d\n", level*(bufferSize-1) );
 
         }
         else {
+            /*remove the previous temp file */
             remove(current);
             free(current);
             current = next;
 
+            /* call one more time for the whole file */
             CALL_OR_DIE(BF_OpenFile(current, &fd));
             next = sort_by_level(fd, level, fieldNo, bufferSize);
+            CALL_OR_DIE(BF_CloseFile(fd));
+
+            /*remove the previous temp file */
             remove(current);
             free(current);
 
@@ -264,16 +274,14 @@ SR_ErrorCode SR_SortedFile(
         }
 
     }
+    printf("=== END OF SORTING WITH LEVELS === \n");
 
+    /* rename the file to the name we want */
     rename(next, output_filename);
     free(next);
 
-
-    // SR_PrintAllEntries(fd);
-
     BF_Block_Destroy(&block);
-    CALL_OR_DIE(BF_CloseFile(fd));
-    printf("=== END OF SORTING FOR FIELD No. %d === \n\n", fieldNo);
+    printf("\n==== END OF SORTING FOR FIELD No. %d ==== \n\n\n", fieldNo);
 
     return SR_OK;
 }
