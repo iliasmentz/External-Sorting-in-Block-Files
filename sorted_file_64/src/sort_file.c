@@ -159,6 +159,7 @@ SR_ErrorCode SR_InsertEntry(int fileDesc, Record record) {
             /*changes were made so we make it dirty before the unpin*/
             BF_Block_SetDirty(block);
             CALL_OR_DIE(BF_UnpinBlock(block));
+            BF_Block_Destroy(&block);
 
             return SR_OK;
         }

@@ -2,7 +2,7 @@ all: sr_main1 sr_main2 sr_main3
 
 sr_main1:
 	@echo " Compile sr_main1 ...";
-	gcc -I ./include/ -L ./lib/ -Wl,-rpath,./lib/ ./examples/sr_main1.c ./src/sort_file.c ./src/sorting_tools.c ./src/heap.c -lbf -o ./build/sr_main1 -O2
+	gcc -g -I ./include/ -L ./lib/ -Wl,-rpath,./lib/ ./examples/sr_main1.c ./src/sort_file.c ./src/sorting_tools.c ./src/heap.c -lbf -o ./build/sr_main1 -O2
 
 sr_main2:
 	@echo " Compile sr_main2 ...";
